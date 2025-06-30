@@ -1,0 +1,79 @@
+services:
+  mongo:
+    image: mongo
+    container_name: cocomee-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - cocomee-net
+
+  auth-service:
+    build: ./auth-service
+    container_name: cocomee-auth
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./auth-service/.env
+    depends_on:
+      - mongo
+    networks:
+      - cocomee-net
+
+  character-service:
+    build: ./character-service
+    container_name: cocomee-character
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./character-service/.env
+    depends_on:
+      - mongo
+    networks:
+      - cocomee-net
+
+  part-service:
+    build: ./part-service
+    container_name: cocomee-part
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./part-service/.env
+    depends_on:
+      - mongo
+    networks:
+      - cocomee-net
+
+  gateway:
+    build: ./gateway
+    container_name: cocomee-gateway
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./gateway/.env
+    depends_on:
+      - auth-service
+      - character-service
+      - part-service
+    networks:
+      - cocomee-net
+
+  frontend:
+    build: ./frontend
+    container_name: cocomee-frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - gateway
+    networks:
+      - cocomee-net
+
+volumes:
+  mongo-data:
+
+networks:
+  cocomee-net:
+    driver: bridge
